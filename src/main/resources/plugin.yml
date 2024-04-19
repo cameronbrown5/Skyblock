@@ -1,0 +1,13 @@
+name: Skyblock
+version: '${project.version}'
+main: me.thecamzone.Skyblock
+api-version: '1.20'
+author: TheCamZone
+description: A Skyblock plugin for Zone-MC
+commands:
+  skyblock:
+    description: Main command for Skyblock
+    usage: /skyblock
+    permission: skyblock.default
+    aliases:
+    - sb
