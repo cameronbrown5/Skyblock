@@ -31,7 +31,15 @@ public class MySQLDatabase {
         }
     }
 
-    public Connection getConnection() {
+    public Connection getConnection() throws SQLException {
+        if(connection == null || connection.isClosed()) {
+            try {
+                connect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         return connection;
     }
 
