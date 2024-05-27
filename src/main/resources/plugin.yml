@@ -4,7 +4,7 @@ main: me.thecamzone.Skyblock
 api-version: '1.20'
 author: TheCamZone
 description: A Skyblock plugin for Zone-MC
-depend: [Multiverse-Core, CamsLootTables, ZoneMC, Quests]
+depend: [Multiverse-Core, CamsLootTables, ZoneMC, Quests, HologramAPI]
 commands:
   skyblock:
     description: Main command for Skyblock

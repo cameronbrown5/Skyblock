@@ -4,6 +4,9 @@ import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class StringUtil {
 
     private static final java.util.Random RANDOM = new java.util.Random();
@@ -12,7 +15,46 @@ public class StringUtil {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
+    public static List<String> color(String ...messages) {
+        List<String> builder = new ArrayList<>();
+        for (int i = 0; i < messages.length; i++) {
+            messages[i] = ChatColor.translateAlternateColorCodes('&', messages[i]);
+            builder.add(messages[i]);
+        }
+        return builder;
+    }
+
+    public static List<String> color(List<String> messages) {
+        List<String> builder = new ArrayList<>();
+        for (String message : messages) {
+            message = ChatColor.translateAlternateColorCodes('&', message);
+            builder.add(message);
+        }
+        return builder;
+    }
+
+    public static String renameMinecraftId(String minecraftId) {
+        // Split the string by underscores and capitalize each word
+        String[] words = minecraftId.toLowerCase().split("_");
+        StringBuilder friendlyName = new StringBuilder();
+
+        for (String word : words) {
+            if (friendlyName.length() > 0) {
+                friendlyName.append(" ");
+            }
+            friendlyName.append(word.substring(0, 1).toUpperCase()).append(word.substring(1));
+        }
+
+        return friendlyName.toString();
+    }
+
     public static String locationToString(Location location) {
+        if(location == null) return "null";
+
+        return location.getWorld().getName() + "," + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
+    }
+
+    public static String locationToStringReadable(Location location) {
         return location.getWorld().getName() + "," + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
     }
 

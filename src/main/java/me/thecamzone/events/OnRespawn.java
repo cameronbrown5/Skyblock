@@ -1,6 +1,8 @@
 package me.thecamzone.events;
 
+import me.thecamzone.Skyblock;
 import me.thecamzone.ZoneMCUtility;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +13,8 @@ public class OnRespawn implements Listener {
     public void onRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
 
-        player.teleport(ZoneMCUtility.getInstance().getSpawnLocation());
+        Bukkit.getScheduler().scheduleSyncDelayedTask(Skyblock.getInstance(), () -> {
+            player.teleport(ZoneMCUtility.getInstance().getSpawnLocation());
+        }, 1L);
     }
 }

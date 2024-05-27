@@ -1,8 +1,10 @@
 package me.thecamzone.commands;
 
 import co.aikar.commands.BaseCommand;
+import co.aikar.commands.PaperCommandManager;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
+import com.google.common.collect.ImmutableList;
 import me.thecamzone.CamsLootTables;
 import me.thecamzone.Skyblock;
 import me.thecamzone.chunks.ChunkCoordinates;
@@ -25,6 +27,16 @@ import java.util.UUID;
 @CommandAlias("island|is")
 @Description("Main island command")
 public class IslandCommand extends BaseCommand {
+
+    private PaperCommandManager manager;
+
+    public IslandCommand(PaperCommandManager manager) {
+        this.manager = manager;
+
+//        manager.getCommandCompletions().registerCompletion("questCategories", c -> {
+//            return ImmutableList.of("BUILDER");
+//        });
+    }
 
     @Subcommand("help")
     @Default

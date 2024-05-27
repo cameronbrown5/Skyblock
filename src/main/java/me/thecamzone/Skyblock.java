@@ -8,15 +8,18 @@ import me.pikamug.quests.quests.Quest;
 import me.thecamzone.commands.DeveloperCommand;
 import me.thecamzone.commands.IslandCommand;
 import me.thecamzone.commands.SkyBlockCommand;
+import me.thecamzone.custom_blocks.CustomBlockDataListener;
+import me.thecamzone.custom_blocks.CustomBlockManager;
+import me.thecamzone.custom_blocks.blocks.IronGenerator;
 import me.thecamzone.database.MySQLDatabase;
-import me.thecamzone.events.OnRespawn;
+import me.thecamzone.events.*;
 import me.thecamzone.island.IslandProtectionListener;
-import me.thecamzone.events.OnPlayerInteract;
-import me.thecamzone.events.OnPlayerJoin;
-import me.thecamzone.events.OnPlayerMove;
 import me.thecamzone.island.Island;
 import me.thecamzone.island.IslandManager;
+import me.thecamzone.quests.QuestMenu;
+import me.thecamzone.utility.CustomFileConfiguration;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,15 +36,23 @@ public final class Skyblock extends JavaPlugin {
     private static Skyblock instance;
     private static IslandManager islandManager;
     private MySQLDatabase db;
+    private CustomBlockManager customBlockManager;
 
     private CamsLootTables camsLootTables;
     private ZoneMCUtility zoneMCUtility;
-    private BukkitQuestsPlugin questsPlugin;
+    private Quests questsPlugin;
+
+    private CustomFileConfiguration categoriesFile;
+    private CustomFileConfiguration generatorsFile;
+
+    private QuestMenu questMenu;
 
     @Override
     public void onEnable() {
         instance = this;
 
+        registerFiles();
+        registerCustomBlocks();
         registerCommands();
         registerListeners();
 
@@ -51,6 +62,8 @@ public final class Skyblock extends JavaPlugin {
 
             initializeIslandManager();
             hookPlugins();
+
+            questMenu = new QuestMenu();
         }, 1);
 
     }
@@ -82,23 +95,33 @@ public final class Skyblock extends JavaPlugin {
         return islandManager;
     }
 
+    private void registerCustomBlocks() {
+        customBlockManager = new CustomBlockManager();
+        getServer().getPluginManager().registerEvents(new CustomBlockDataListener(this), this);
+
+        customBlockManager.addAvailableCustomBlock("iron_generator", new IronGenerator(this, Material.IRON_ORE, 1));
+    }
+
     private void initializeIslandManager() {
         islandManager = new IslandManager(db);
         try {
             islandManager.loadIslands();
         } catch (SQLException e) {
             getLogger().severe("Could not load islands from the database.");
-            getServer().getPluginManager().disablePlugin(this);
             getServer().shutdown();
             throw new RuntimeException(e);
         }
+    }
+
+    private void registerFiles() {
+        categoriesFile = new CustomFileConfiguration(this, "categories.yml");
+        generatorsFile = new CustomFileConfiguration(this, "generators.yml");
     }
 
     private void hookPlugins() {
         camsLootTables = (CamsLootTables) Bukkit.getPluginManager().getPlugin("CamsLootTables");
         if(camsLootTables == null) {
             getLogger().severe("Could not find CamsLootTables plugin.");
-            getServer().getPluginManager().disablePlugin(this);
             getServer().shutdown();
             return;
         } else {
@@ -108,17 +131,15 @@ public final class Skyblock extends JavaPlugin {
         zoneMCUtility = (ZoneMCUtility) Bukkit.getPluginManager().getPlugin("ZoneMC");
         if(zoneMCUtility == null) {
             getLogger().severe("Could not find ZoneMCUtility plugin.");
-            getServer().getPluginManager().disablePlugin(this);
             getServer().shutdown();
             return;
         } else {
             getLogger().info("Hooked into ZoneMCUtility plugin.");
         }
 
-        questsPlugin = (BukkitQuestsPlugin) Bukkit.getPluginManager().getPlugin("Quests");
+        questsPlugin = (Quests) Bukkit.getPluginManager().getPlugin("Quests");
         if(questsPlugin == null) {
             getLogger().severe("Could not find Quests plugin.");
-            getServer().getPluginManager().disablePlugin(this);
             getServer().shutdown();
             return;
         } else {
@@ -132,14 +153,15 @@ public final class Skyblock extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new OnPlayerMove(), this);
         getServer().getPluginManager().registerEvents(new OnPlayerJoin(), this);
         getServer().getPluginManager().registerEvents(new OnRespawn(), this);
+        getServer().getPluginManager().registerEvents(new OnBlockForm(), this);
     }
 
     private void registerCommands() {
         PaperCommandManager commandManager = new PaperCommandManager(this);
 
-        commandManager.registerCommand(new SkyBlockCommand());
-        commandManager.registerCommand(new IslandCommand());
-        commandManager.registerCommand(new DeveloperCommand());
+        commandManager.registerCommand(new SkyBlockCommand(commandManager));
+        commandManager.registerCommand(new IslandCommand(commandManager));
+        commandManager.registerCommand(new DeveloperCommand(commandManager));
 
         commandManager.getCommandCompletions().registerAsyncCompletion("player_islands", c ->
             islandManager.getIslandsPlayerBelongsTo(c.getPlayer()).stream()
@@ -174,6 +196,15 @@ public final class Skyblock extends JavaPlugin {
         return questsPlugin;
     }
 
+    public QuestMenu getQuestMenu() {
+        return questMenu;
+    }
+
+    public CustomBlockManager getCustomBlockManager() {
+        return customBlockManager;
+    }
+
+
     private void createFiles() {
         saveDefaultConfig();
 
@@ -194,6 +225,17 @@ public final class Skyblock extends JavaPlugin {
         if(mysqlConfig == null) {
             getLogger().severe("Failed to load the MySQL configuration.");
             getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        boolean enabled = mysqlConfig.getBoolean("enabled");
+
+        if(!mysqlConfig.contains("enabled")) {
+            enabled = true;
+        }
+
+        if(!enabled) {
+            getLogger().severe("MySQL is not enabled.");
             return;
         }
 
@@ -273,6 +315,14 @@ public final class Skyblock extends JavaPlugin {
 
     public CamsLootTables getCamsLootTables() {
         return camsLootTables;
+    }
+
+    public CustomFileConfiguration getCategoriesFile() {
+        return categoriesFile;
+    }
+
+    public CustomFileConfiguration getGeneratorsFile() {
+        return generatorsFile;
     }
 
     private void copySchematic() {

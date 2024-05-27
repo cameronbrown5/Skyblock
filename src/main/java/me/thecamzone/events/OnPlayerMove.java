@@ -3,6 +3,7 @@ package me.thecamzone.events;
 import me.thecamzone.Skyblock;
 import me.thecamzone.island.Island;
 import me.thecamzone.island.IslandManager;
+import me.thecamzone.player.PlayerConfig;
 import me.thecamzone.player.PlayerConfigManager;
 import me.thecamzone.utility.MapUtil;
 import net.kyori.adventure.text.Component;
@@ -18,7 +19,13 @@ public class OnPlayerMove implements Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        if(PlayerConfigManager.getInstance().getPlayerConfig(event.getPlayer().getUniqueId()).getShowNearby()) {
+        PlayerConfig config = PlayerConfigManager.getInstance().getPlayerConfig(event.getPlayer().getUniqueId());
+
+        if(config == null) {
+            return;
+        }
+
+        if(config.getShowNearby()) {
             Chunk fromChunk = event.getFrom().getChunk();
             Chunk toChunk = event.getTo().getChunk();
 

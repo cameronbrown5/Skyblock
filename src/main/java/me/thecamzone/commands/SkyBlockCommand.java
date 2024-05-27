@@ -1,7 +1,9 @@
 package me.thecamzone.commands;
 
 import co.aikar.commands.BaseCommand;
+import co.aikar.commands.PaperCommandManager;
 import co.aikar.commands.annotation.*;
+import com.google.common.collect.ImmutableList;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import me.thecamzone.Skyblock;
 import me.thecamzone.island.Island;
@@ -26,6 +28,16 @@ import java.util.stream.Collectors;
 @Description("Main SkyBlock command")
 @CommandPermission("skyblock.admin")
 public class SkyBlockCommand extends BaseCommand {
+
+    private PaperCommandManager manager;
+
+    public SkyBlockCommand(PaperCommandManager manager) {
+        this.manager = manager;
+
+//        manager.getCommandCompletions().registerCompletion("questCategories", c -> {
+//            return ImmutableList.of("BUILDER");
+//        });
+    }
 
     @Subcommand("help")
     @Default
@@ -70,6 +82,18 @@ public class SkyBlockCommand extends BaseCommand {
 
         Location location = chunk.getBlock(8, 0, 8).getLocation().add(0, 2, 0);
         WorldEditUtil.paste(schematic, location);
+    }
+
+    @Subcommand("give")
+    public void onGive(Player player, String item, int amount) {
+        ItemStack itemStack = Skyblock.getInstance().getCustomBlockManager().getCustomItem(item);
+        if(itemStack == null) {
+            player.sendMessage(StringUtil.color("&cThat item does not exist."));
+            return;
+        }
+
+        itemStack.setAmount(amount);
+        player.getInventory().addItem(itemStack);
     }
 
 }
