@@ -6,6 +6,7 @@ import me.thecamzone.custom_blocks.types.Generator;
 import me.thecamzone.utility.StringUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +23,14 @@ public class CustomBlockManager {
 
     private final HashMap<Location, CustomBlock> placedCustomBlocks = new HashMap<>();
     private final HashMap<String, CustomBlock> availableCustomBlocks = new HashMap<>();
+    private final NamespacedKey customBlockKey = new NamespacedKey(Skyblock.getInstance(), "serialized_custom_block");
 
     {
         load();
+    }
+
+    public NamespacedKey getCustomBlockKey() {
+        return customBlockKey;
     }
 
     public CustomBlock getCustomBlockFromItem(ItemStack item) {
@@ -46,36 +52,33 @@ public class CustomBlockManager {
         // Split the string into parts
         String[] parts = customBlockType.split("\\{");
         // The first part should be the class name
-        String className = "me.thecamzone.custom_blocks.blocks." + parts[0];
+        String className = parts[0];
 
-        // The rest of the parts should be the parameters
-        String parametersString = parts[1].substring(0, parts[1].length() - 1); // remove the closing }
-        String[] parameters = parametersString.split(", ");
-
-        // Convert parameters to a format without keys, only values
-        String[] values = new String[parameters.length];
-        for (int i = 0; i < parameters.length; i++) {
-            String[] keyValue = parameters[i].split("=");
-            values[i] = keyValue[1];
+        CustomBlock customBlock = getCustomBlock(className);
+        if (customBlock == null) {
+            return null;
         }
 
-        try {
-            // Get the Class object for the class name
-            Class<?> clazz = Class.forName(className);
+        //iron_generator{material=IRON_BLOCK, level=1, chance=0.1, location=world,0,0,0}
+        if(customBlock instanceof Generator generator) {
+            // Extract properties from the string
+            String[] properties = parts[1].substring(0, parts[1].length() - 1).split(", ");
+            Map<String, String> propertyMap = new HashMap<>();
+            for (String property : properties) {
+                String[] keyValue = property.split("=");
+                propertyMap.put(keyValue[0], keyValue[1]);
+            }
 
-            // Get the constructor that takes a string array
-            Constructor<?> constructor = clazz.getConstructor(String[].class);
+            // Set properties of the generator
+            generator.setMaterial(Material.valueOf(propertyMap.get("material")));
+            generator.setLevel(Integer.parseInt(propertyMap.get("level")));
+            generator.setChance(Double.parseDouble(propertyMap.get("chance")));
+            generator.setLocation(StringUtil.stringToLocation(propertyMap.get("location")));
 
-            // Create a new instance using the constructor
-            CustomBlock customBlock = (CustomBlock) constructor.newInstance((Object) values);
-
-            return customBlock;
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
-                 InvocationTargetException e) {
-            e.printStackTrace();
+            return generator;
         }
 
-        return null;
+        return customBlock;
     }
 
     public Map<Location, CustomBlock> getPlacedCustomBlocks() {
@@ -91,6 +94,10 @@ public class CustomBlockManager {
 
     public void addAvailableCustomBlock(String name, CustomBlock customBlock) {
         availableCustomBlocks.put(name, customBlock);
+    }
+
+    public CustomBlock getCustomBlock(String name) {
+        return availableCustomBlocks.get(name);
     }
 
     public ItemStack getCustomItem(String item) {
@@ -136,7 +143,7 @@ public class CustomBlockManager {
                 continue;
             }
 
-            placedCustomBlocks.put(StringUtil.stringToLocation(key), Generator.fromString(config.getString(key), Skyblock.getInstance()));
+            placedCustomBlocks.put(StringUtil.stringToLocation(key), getCustomBlock(config.getString("custom_blocks." + key)));
 
             Skyblock.getInstance().getLogger().info("Loaded custom block at " + key);
         }

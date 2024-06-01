@@ -16,18 +16,13 @@ public abstract class CustomBlock {
         this.customBlockKey = new NamespacedKey(plugin, "custom_block");
     }
 
-
-
     public abstract ItemStack getCustomItem();
-    public abstract void placeBlock(Location location);
 
     public NamespacedKey getCustomBlockKey() {
         return customBlockKey;
     }
 
-    public String toString() {
-        return "CustomBlock{}";
-    }
+    public abstract String toString();
 
 
 }

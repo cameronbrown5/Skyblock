@@ -129,25 +129,4 @@ public abstract class Generator extends CustomBlock {
         double roll = random.nextDouble() * 100;
         return roll < chance;
     }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Generator{");
-        sb.append("material=").append(getMaterial());
-        sb.append(", level=").append(getLevel());
-        sb.append(", chance=").append(getChance());
-        sb.append(", location=").append(StringUtil.locationToString(getLocation()));
-        sb.append("}");
-
-        return sb.toString();
-    }
-
-    public static Generator fromString(String s, JavaPlugin plugin) {
-        String[] parts = s.split(",");
-        Material material = Material.valueOf(parts[1].split("=")[1]);
-        int level = Integer.parseInt(parts[2].split("=")[1]);
-        Location location = StringUtil.stringToLocation(parts[3].split("=")[1]);
-        return new IronGenerator(plugin, material, level);
-    }
 }

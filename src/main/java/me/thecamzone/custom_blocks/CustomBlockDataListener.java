@@ -96,9 +96,11 @@ public class CustomBlockDataListener implements Listener {
             Skyblock.getInstance().getLogger().info("Serialized custom block is null");
             return;
         }
+
         blockData.set(customBlockKey, PersistentDataType.STRING, serializedCustomBlock);
 
-        customBlock.placeBlock(event.getBlockPlaced().getLocation());
+        Skyblock.getInstance().getCustomBlockManager().getPlacedCustomBlocks().put(location, customBlock);
+        customBlock.placeBlock(location);
         Skyblock.getInstance().getLogger().info("Generator placed");
 
         Skyblock.getInstance().getCustomBlockManager().save();
@@ -121,14 +123,21 @@ public class CustomBlockDataListener implements Listener {
         if (customBlock instanceof Generator generator) {
             handleGeneratorInteraction(event, item, generator);
         }
+
+        String serializedCustomBlock = blockData.get(customBlockKey, PersistentDataType.STRING);
+        if(serializedCustomBlock == null) {
+            Skyblock.getInstance().getLogger().info("Serialized custom block is null");
+            return;
+        }
+        blockData.set(customBlockKey, PersistentDataType.STRING, serializedCustomBlock);
     }
 
     private void removeGeneratorHologram(Generator generator) {
-        try {
-            generator.getHologram().kill();
-        } catch (NullPointerException e) {
-            generator.getHologramLocation().getNearbyEntities(0.1, 0.1, 0.1).forEach(Entity::remove);
-            Skyblock.getInstance().getLogger().info("Entity is null. Trying to remove nearby entities.");
+        TextHologram hologram = generator.getHologram();
+        if (hologram != null) {
+            hologram.kill();
+        } else {
+            Skyblock.getInstance().getLogger().info("Hologram is null for generator at " + generator.getLocation());
         }
     }
 

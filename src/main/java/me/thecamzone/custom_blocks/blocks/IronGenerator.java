@@ -44,13 +44,14 @@ public class IronGenerator extends Generator  {
     @Override
     public void placeBlock(Location location) {
         Skyblock.getInstance().getCustomBlockManager().getPlacedCustomBlocks().put(location, this);
+        setLocation(location);
         createHologram();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("IronGenerator{");
+        sb.append("iron_generator{");
         sb.append("material=").append(getMaterial());
         sb.append(", level=").append(getLevel());
         sb.append(", chance=").append(getChance());

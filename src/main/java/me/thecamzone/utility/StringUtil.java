@@ -59,6 +59,10 @@ public class StringUtil {
     }
 
     public static Location stringToLocation(String string) {
+        if(string.equalsIgnoreCase("null")) {
+            return null;
+        }
+
         String[] parts = string.split(",");
 
         return new Location(
